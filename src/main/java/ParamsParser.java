@@ -49,7 +49,7 @@ public class ParamsParser {
         } catch (ParseException e) {
             log.error(e.getMessage());
             System.out.println(e.getMessage());
-            new HelpFormatter().printHelp("app <options> file1 file2", options);
+            new HelpFormatter().printHelp("app <options> file1.txt file2.txt", options);
             throw e;
         }
     }

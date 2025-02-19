@@ -40,8 +40,8 @@ public class Statistic {
         int count = fileReader.getIntegers().size();
         long min = fileReader.getIntegers().stream().min(Long::compare).orElse(0L);
         long max = fileReader.getIntegers().stream().max(Long::compare).orElse(0L);
-        long sum = (long) fileReader.getIntegers().stream().mapToDouble(Long::longValue).sum();
-        double average = fileReader.getIntegers().stream().mapToLong(Long::longValue).average().orElse(0.0);
+        double sum = fileReader.getIntegers().stream().mapToDouble(Long::doubleValue).sum();
+        double average = fileReader.getIntegers().stream().mapToDouble(Long::doubleValue).average().orElse(0.0);
 
         System.out.println("Detailed statistics for integers:" +
                 "\n- Count of recorded integers: " + count +
