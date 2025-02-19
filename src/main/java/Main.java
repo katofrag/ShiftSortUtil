@@ -5,25 +5,26 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         try {
-            Business business = new Business();
+            log.info("Application started");
             ParamsParser parser = new ParamsParser();
-            Params params = null;
+            Business business = new Business();
+            Params params;
             try {
                 params = parser.parsedArgs(args, parser);
-                System.out.println(params);
+                log.info("Parameters passed to our application {}", params);
+                business.process(params);
             } catch (ParseException e) {
-                logger.error(e.getMessage());
                 System.exit(2);
-            } catch (IOException e){
-                logger.info(e.getMessage());
+            } catch (IOException e) {
                 System.exit(3);
             }
-            business.process(params);
+
         } catch (Exception e) {
+            log.error("Unexpected error occurred: {}", e.getMessage());
             System.out.println("Unexpected error occurred: " + e.getMessage());
             System.exit(4);
         }
