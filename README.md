@@ -64,4 +64,6 @@ ___
 Для запуска утилиты выполните команду:
 
 Например:
->java -jar ShiftSortUtil.jar -s -a -p sample- in1.txt in2.txt
+```
+java -jar ShiftSortUtil.jar -s -a -p sample- in1.txt in2.txt
+```
