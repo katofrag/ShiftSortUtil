@@ -1,6 +1,7 @@
 import java.nio.file.Path;
+import java.util.List;
 
 public record Params(Path outPath, String prefix,
-                     boolean aEnable, boolean sEnable, boolean fEnable, Path file1, Path file2) {
+                     boolean aEnable, boolean sEnable, boolean fEnable, List<Path> files) {
 }
 

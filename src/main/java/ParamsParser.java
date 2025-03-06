@@ -4,7 +4,9 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class ParamsParser {
 
@@ -40,9 +42,9 @@ public class ParamsParser {
             if (commandLine.hasOption(P_OPT)) {
                 prefix = commandLine.getOptionValue(P_OPT);
             }
-            if (commandLine.getArgList().size() != 2) {
+            if (commandLine.getArgList().isEmpty()) {
                 log.error("Passed arguments{}", commandLine.getArgList());
-                throw new ParseException("It is necessary to pass 2 files as arguments");
+                throw new ParseException("It is necessary to pass files as arguments");
             }
 
             return commandLine;
@@ -56,15 +58,17 @@ public class ParamsParser {
 
     public Params parsedArgs(String[] args, ParamsParser parser) throws ParseException {
         CommandLine commandLine = parser.parse(args);
-        var fileName = commandLine.getArgList().iterator();
+        List<Path> files = new ArrayList<>(commandLine.getArgList().size());
+        for (int i = 0; i < commandLine.getArgList().size(); i++) {
+            files.add(Path.of(commandLine.getArgList().get(i)));
+        }
         return new Params(
                 outPath,
                 prefix,
                 commandLine.hasOption(A_OPT),
                 commandLine.hasOption(S_OPT),
                 commandLine.hasOption(F_OPT),
-                Paths.get(fileName.next()),
-                Paths.get(fileName.next())
+                files
         );
     }
 }

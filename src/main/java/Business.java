@@ -28,12 +28,8 @@ public class Business {
             throw e;
         }
 
-        fileReader.processInputFiles(params.file1());
-        fileReader.processInputFiles(params.file2());
-
-        if (fileReader.getCountNoValidFile() == 2) {
-            log.error("No valid files were transferred");
-            throw new IOException("No valid files were transferred");
+        for (int i = 0; i < params.files().size(); i++) {
+            fileReader.processInputFiles(params.files().get(i));
         }
 
         statistic.displayStatistics(params.sEnable(), params.fEnable(), fileReader);

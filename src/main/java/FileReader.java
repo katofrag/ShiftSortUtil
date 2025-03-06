@@ -13,19 +13,16 @@ public class FileReader {
     private final List<String> strings = new ArrayList<>();
     private final List<Long> integers = new ArrayList<>();
     private final List<Double> floats = new ArrayList<>();
-    private int countNoValidFile = 0;
 
     public void processInputFiles(Path path) throws IOException {
         if (!Files.exists(path)) {
             log.error("Error: File does not exist at the specified path: {}", path);
             System.out.println("Error: File does not exist at the specified path: " + path);
-            countNoValidFile++;
             return;
         }
         if (!path.toString().endsWith(".txt")) {
             log.error("Error: Invalid file format. Expected \"filename.txt\", accepted file: {}", path);
             System.out.println("Error: Invalid file format. Expected \"filename.txt\", accepted file: " + path);
-            countNoValidFile++;
             return;
         }
         try (Stream<String> lines = Files.lines(path)) {
@@ -61,9 +58,5 @@ public class FileReader {
 
     public List<Double> getFloats() {
         return floats;
-    }
-
-    public int getCountNoValidFile() {
-        return countNoValidFile;
     }
 }
