@@ -28,8 +28,8 @@ public class Business {
             throw e;
         }
 
-        for (int i = 0; i < params.files().size(); i++) {
-            fileReader.processInputFiles(params.files().get(i));
+        for (Path path : params.files()){
+            fileReader.processInputFiles(path);
         }
 
         statistic.displayStatistics(params.sEnable(), params.fEnable(), fileReader);

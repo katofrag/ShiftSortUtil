@@ -59,8 +59,8 @@ public class ParamsParser {
     public Params parsedArgs(String[] args, ParamsParser parser) throws ParseException {
         CommandLine commandLine = parser.parse(args);
         List<Path> files = new ArrayList<>(commandLine.getArgList().size());
-        for (int i = 0; i < commandLine.getArgList().size(); i++) {
-            files.add(Path.of(commandLine.getArgList().get(i)));
+        for(String fileName : commandLine.getArgList()){
+            files.add(Path.of(fileName));
         }
         return new Params(
                 outPath,
