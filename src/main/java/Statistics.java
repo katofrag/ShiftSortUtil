@@ -1,7 +1,7 @@
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Statistic {
+public class Statistics {
 
     public void displayStatistics(boolean sEnable, boolean fEnable, FileReader fileReader) {
         if (sEnable) {

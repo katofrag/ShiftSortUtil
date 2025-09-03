@@ -17,7 +17,7 @@ public class Business {
     public void process(Params params) throws IOException, ParseException {
         FileReader fileReader = new FileReader();
         FileWriter fileWriter = new FileWriter();
-        Statistic statistic = new Statistic();
+        Statistics statistic = new Statistics();
 
         try {
             if (params.aEnable()) {

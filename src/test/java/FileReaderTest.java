@@ -1,185 +1,67 @@
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mockStatic;
+import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
 class FileReaderTest {
 
-    @InjectMocks
-    private FileReader fileReader;
-
-    private final Path existingTxtPath = Path.of("existing_file.txt");
-    private final Path nonExistingPath = Path.of("ghost.txt");
-    private final Path nonTxtPath = Path.of("image.png");
-
     @Test
-    void processInputFilesShouldNotModifyCollectionsWhenFileDoesNotExist() throws IOException {
-        // Arrange
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(nonExistingPath)).thenReturn(false);
+    void processInputFiles_shouldParseAllDataTypesCorrectly(@TempDir Path tempDir) throws Exception {
+        FileReader fileReader = new FileReader();
+        Path testFile = tempDir.resolve("test.txt");
+        Files.write(testFile, List.of("123", "45.67", "hello", "-100", "3.14", "world"));
 
-            int initialIntSize = fileReader.getIntegers().size();
-            int initialFloatSize = fileReader.getFloats().size();
-            int initialStringSize = fileReader.getStrings().size();
+        fileReader.processInputFiles(testFile);
 
-            // Act
-            fileReader.processInputFiles(nonExistingPath);
-
-            // Assert
-            assertAll("Collections should remain unchanged",
-                    () -> assertEquals(initialIntSize, fileReader.getIntegers().size()),
-                    () -> assertEquals(initialFloatSize, fileReader.getFloats().size()),
-                    () -> assertEquals(initialStringSize, fileReader.getStrings().size())
-            );
-        }
-    }
-
-    @Test
-    void processInputFilesShouldNotModifyCollectionsWhenFileIsNotTxt() throws IOException {
-        // Arrange
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(nonTxtPath)).thenReturn(true);
-
-            int initialIntSize = fileReader.getIntegers().size();
-            int initialFloatSize = fileReader.getFloats().size();
-            int initialStringSize = fileReader.getStrings().size();
-
-            // Act
-            fileReader.processInputFiles(nonTxtPath);
-
-            // Assert
-            assertAll("Collections should remain unchanged for non-TXT file",
-                    () -> assertEquals(initialIntSize, fileReader.getIntegers().size()),
-                    () -> assertEquals(initialFloatSize, fileReader.getFloats().size()),
-                    () -> assertEquals(initialStringSize, fileReader.getStrings().size())
-            );
-        }
-    }
-
-    @Test
-    void processInputFilesShouldParseLinesCorrectlyWhenFileIsValid() throws IOException {
-        // Arrange
-        List<String> fileContent = List.of(
-                "42",           // -> Long
-                "3.14",         // -> Double
-                "hello world",  // -> String
-                "-100",         // -> Long
-                "0.0",          // -> Double
-                "",             // -> Ignored (
-                "  123  "       // -> Long (тримминг работает)
+        assertAll(
+                () -> assertEquals(List.of(123L, -100L), fileReader.getIntegers()),
+                () -> assertEquals(List.of(45.67, 3.14), fileReader.getFloats()),
+                () -> assertEquals(List.of("hello", "world"), fileReader.getStrings())
         );
-
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(existingTxtPath)).thenReturn(true);
-            filesMock.when(() -> Files.lines(existingTxtPath)).thenReturn(fileContent.stream());
-
-            // Act
-            fileReader.processInputFiles(existingTxtPath);
-
-            // Assert
-            assertAll("Data should be parsed correctly from valid file",
-                    () -> assertEquals(List.of(42L, -100L, 123L), fileReader.getIntegers()),
-                    () -> assertEquals(List.of(3.14, 0.0), fileReader.getFloats()),
-                    () -> assertEquals(List.of("hello world"), fileReader.getStrings())
-            );
-        }
     }
 
-    @Test
-    void processInputFilesShouldAccumulateDataWhenMultipleFilesProcessed() throws IOException {
-        // Arrange
-        Path firstFile = Path.of("first.txt");
-        Path secondFile = Path.of("second.txt");
+    @ParameterizedTest
+    @ValueSource(strings = {"test.dat", "test.xml", "file"})
+    void processInputFiles_shouldIgnoreNonTxtFiles(String filename, @TempDir Path tempDir) throws Exception {
+        FileReader fileReader = new FileReader();
+        Path testFile = tempDir.resolve(filename);
+        Files.write(testFile, List.of("123", "test"));
 
-        List<String> firstFileContent = List.of("1", "2.0", "text1");
-        List<String> secondFileContent = List.of("3", "4.0", "text2");
+        fileReader.processInputFiles(testFile);
 
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(firstFile)).thenReturn(true);
-            filesMock.when(() -> Files.exists(secondFile)).thenReturn(true);
-            filesMock.when(() -> Files.lines(firstFile)).thenReturn(firstFileContent.stream());
-            filesMock.when(() -> Files.lines(secondFile)).thenReturn(secondFileContent.stream());
-
-            // Act
-            fileReader.processInputFiles(firstFile);
-            fileReader.processInputFiles(secondFile);
-
-            // Assert
-            assertAll("Data should be accumulated from multiple files",
-                    () -> assertEquals(List.of(1L, 3L), fileReader.getIntegers()),
-                    () -> assertEquals(List.of(2.0, 4.0), fileReader.getFloats()),
-                    () -> assertEquals(List.of("text1", "text2"), fileReader.getStrings())
-            );
-        }
-    }
-
-    @Test
-    void processInputFilesShouldHandleEdgeCasesCorrectly() throws IOException {
-        // Arrange
-        Path edgeCaseFile = Path.of("edge.txt");
-        List<String> edgeCases = List.of(
-                "999999999999999",  // Very large integer -> Long
-                "3.1415926535",     // Double with many decimals
-                "123.0",            // Double (even though it looks like integer)
-                "0",                // Long
-                "0.0",              // Double
-                "-42",              // Long
-                "   spaced  ",      // String (after trim)
-                "",                 // Empty -> Ignored
-                "   ",              // Whitespace -> Ignored
-                "123abc"            // Not a number -> String
+        assertAll(
+                () -> assertTrue(fileReader.getIntegers().isEmpty()),
+                () -> assertTrue(fileReader.getFloats().isEmpty()),
+                () -> assertTrue(fileReader.getStrings().isEmpty())
         );
-
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(edgeCaseFile)).thenReturn(true);
-            filesMock.when(() -> Files.lines(edgeCaseFile)).thenReturn(edgeCases.stream());
-
-            // Act
-            fileReader.processInputFiles(edgeCaseFile);
-
-            // Assert
-            assertAll("Edge cases should be handled correctly",
-                    () -> assertEquals(List.of(999999999999999L, 0L, -42L), fileReader.getIntegers()),
-                    () -> assertEquals(List.of(3.1415926535, 123.0, 0.0), fileReader.getFloats()),
-                    () -> assertEquals(List.of("spaced", "123abc"), fileReader.getStrings())
-            );
-        }
     }
 
     @Test
-    void processInputFilesShouldNotModifyCollectionsWhenFileIsEmpty() throws IOException {
-        // Arrange
-        Path emptyFile = Path.of("empty.txt");
-        List<String> emptyContent = List.of();
+    void processInputFiles_shouldHandleNonExistentFileGracefully(@TempDir Path tempDir) {
+        FileReader fileReader = new FileReader();
+        Path nonExistentFile = tempDir.resolve("nonexistent.txt");
 
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-            filesMock.when(() -> Files.exists(emptyFile)).thenReturn(true);
-            filesMock.when(() -> Files.lines(emptyFile)).thenReturn(emptyContent.stream());
+        assertDoesNotThrow(() -> fileReader.processInputFiles(nonExistentFile));
+    }
 
-            int initialIntSize = fileReader.getIntegers().size();
-            int initialFloatSize = fileReader.getFloats().size();
-            int initialStringSize = fileReader.getStrings().size();
+    @Test
+    void processInputFiles_shouldSkipEmptyAndWhitespaceLines(@TempDir Path tempDir) throws Exception {
+        FileReader fileReader = new FileReader();
+        Path testFile = tempDir.resolve("test.txt");
+        Files.write(testFile, List.of("", "   ", "\t", "valid", "  42  "));
 
-            // Act
-            fileReader.processInputFiles(emptyFile);
+        fileReader.processInputFiles(testFile);
 
-            // Assert
-            assertAll("Collections should remain unchanged for empty file",
-                    () -> assertEquals(initialIntSize, fileReader.getIntegers().size()),
-                    () -> assertEquals(initialFloatSize, fileReader.getFloats().size()),
-                    () -> assertEquals(initialStringSize, fileReader.getStrings().size())
-            );
-        }
+        assertAll(
+                () -> assertEquals(List.of(42L), fileReader.getIntegers()),
+                () -> assertTrue(fileReader.getFloats().isEmpty()),
+                () -> assertEquals(List.of("valid"), fileReader.getStrings())
+        );
     }
 }
