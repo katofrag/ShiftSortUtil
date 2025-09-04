@@ -14,11 +14,21 @@ public class Business {
     private final String floats = "floats.txt";
     private final String strings = "strings.txt";
 
-    public void process(Params params) throws IOException, ParseException {
-        FileReader fileReader = new FileReader();
-        FileWriter fileWriter = new FileWriter();
-        Statistics statistic = new Statistics();
+    private final FileReader fileReader;
+    private final FileWriter fileWriter;
+    private final Statistics statistic;
 
+    public Business(FileReader fileReader, FileWriter fileWriter, Statistics statistic) {
+        this.fileReader = fileReader;
+        this.fileWriter = fileWriter;
+        this.statistic = statistic;
+    }
+
+    public Business() {
+        this(new FileReader(), new FileWriter(), new Statistics());
+    }
+
+    public void process(Params params) throws IOException, ParseException {
         try {
             if (params.aEnable()) {
                 validateFileExistence(params);

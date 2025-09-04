@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,9 +12,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FileReaderTest {
 
+    private FileReader fileReader;
+
+    @TempDir
+    Path tempDir;
+
+    @BeforeEach
+    void setUp() {
+        fileReader = new FileReader();
+    }
+
     @Test
-    void processInputFiles_shouldParseAllDataTypesCorrectly(@TempDir Path tempDir) throws Exception {
-        FileReader fileReader = new FileReader();
+    void processInputFilesShouldParseAllDataTypesCorrectly() throws Exception {
         Path testFile = tempDir.resolve("test.txt");
         Files.write(testFile, List.of("123", "45.67", "hello", "-100", "3.14", "world"));
 
@@ -28,8 +38,7 @@ class FileReaderTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"test.dat", "test.xml", "file"})
-    void processInputFiles_shouldIgnoreNonTxtFiles(String filename, @TempDir Path tempDir) throws Exception {
-        FileReader fileReader = new FileReader();
+    void processInputFilesShouldIgnoreNonTxtFiles(String filename) throws Exception {
         Path testFile = tempDir.resolve(filename);
         Files.write(testFile, List.of("123", "test"));
 
@@ -43,16 +52,14 @@ class FileReaderTest {
     }
 
     @Test
-    void processInputFiles_shouldHandleNonExistentFileGracefully(@TempDir Path tempDir) {
-        FileReader fileReader = new FileReader();
-        Path nonExistentFile = tempDir.resolve("nonexistent.txt");
+    void processInputFilesShouldHandleNonExistentFileGracefully() {
+        Path nonExistentFile = tempDir.resolve("test.txt");
 
         assertDoesNotThrow(() -> fileReader.processInputFiles(nonExistentFile));
     }
 
     @Test
-    void processInputFiles_shouldSkipEmptyAndWhitespaceLines(@TempDir Path tempDir) throws Exception {
-        FileReader fileReader = new FileReader();
+    void processInputFilesShouldSkipEmptyAndWhitespaceLines() throws Exception {
         Path testFile = tempDir.resolve("test.txt");
         Files.write(testFile, List.of("", "   ", "\t", "valid", "  42  "));
 
